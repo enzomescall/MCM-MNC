@@ -1,55 +1,61 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from scipy.integrate import odeint
 
-# Define the vector field function based on given equations
-def vector_field(X, t):
-    x, y = X
-    dxdt = np.cos(y)
-    dydt = -np.sin(x)
-    return [dxdt, dydt]
+# Define the 3D vector field function based on given equations
+def vector_field_3d(X, t):
+    x, y, z = X
+    dxdt = np.cos(y) - z
+    dydt =-np.sin(x) - z
+    dzdt = np.sin(x) + np.cos(y)
+    return [dxdt, dydt, dzdt]
 
-# Generate grid of points in the xy-plane
-x = np.linspace(-3, 3, 20)
-y = np.linspace(-3, 3, 20)
-X, Y = np.meshgrid(x, y)
+# Generate grid of points in 3D space
+x = np.linspace(-5, 5, 20)
+y = np.linspace(-5, 5, 20)
+z = np.linspace(-5, 5, 20)
+X, Y, Z = np.meshgrid(x, y, z)
 
-# Calculate the vector field values at each point
-U, V = np.zeros_like(X), np.zeros_like(Y)
+# Calculate the 3D vector field values at each point
+U, V, W = np.zeros_like(X), np.zeros_like(Y), np.zeros_like(Z)
 for i in range(len(x)):
     for j in range(len(y)):
-        x_val = X[i, j]
-        y_val = Y[i, j]
-        vec_field = vector_field([x_val, y_val], 0)
-        U[i, j] = vec_field[0]
-        V[i, j] = vec_field[1]
+        for k in range(len(z)):
+            x_val, y_val, z_val = X[i, j, k], Y[i, j, k], Z[i, j, k]
+            vec_field = vector_field_3d([x_val, y_val, z_val], 0)
+            U[i, j, k] = vec_field[0]
+            V[i, j, k] = vec_field[1]
+            W[i, j, k] = vec_field[2]
 
-# Plot the vector field
-plt.figure(figsize=(8, 8))
-plt.quiver(X, Y, U, V, scale=20, color='blue')
-plt.title('Vector Field')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.grid(True)
+# Plot the 3D vector field
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.quiver(X, Y, Z, U, V, W, length=0.2, normalize=True, color='blue')
+ax.set_title('3D Vector Field')
+ax.set_xlabel('X-axis')
+ax.set_ylabel('Y-axis')
+ax.set_zlabel('Z-axis')
 plt.show()
 
-# Define initial conditions for particle
-initial_conditions = [-1, 0.5]
+# Define initial conditions for 3D trajectory
+initial_conditions_3d = [0.5, 0.5, 3.0]
 
 # Define the time parameter for simulation
 t = np.linspace(0, 5, 100)
 
-# Integrate the system of ODEs to simulate particle movement
-particle_path = odeint(vector_field, initial_conditions, t)
+# Integrate the system of ODEs to simulate 3D trajectory
+trajectory_3d = np.array(odeint(vector_field_3d, initial_conditions_3d, t))
 
-# Plot the particle's trajectory in the vector field
-plt.figure(figsize=(8, 8))
-plt.quiver(X, Y, U, V, scale=20, color='blue')
-plt.plot(particle_path[:, 0], particle_path[:, 1], 'r-', label='Particle Trajectory')
-plt.scatter(initial_conditions[0], initial_conditions[1], color='red', marker='o', label='Initial Position')
-plt.title('Particle Movement in Vector Field')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.legend()
-plt.grid(True)
+# Plot the 3D trajectory in the vector field
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.quiver(X, Y, Z, U, V, W, length=0.2, normalize=True, color='blue', alpha=0.3)
+ax.plot(trajectory_3d[:, 0], trajectory_3d[:, 1], trajectory_3d[:, 2], 'r-', label='3D Trajectory')
+ax.scatter(initial_conditions_3d[0], initial_conditions_3d[1], initial_conditions_3d[2], color='red', marker='o', label='Initial Position')
+ax.set_title('3D Trajectory in Vector Field')
+ax.set_xlabel('X-axis')
+ax.set_ylabel('Y-axis')
+ax.set_zlabel('Z-axis')
+ax.legend()
 plt.show()

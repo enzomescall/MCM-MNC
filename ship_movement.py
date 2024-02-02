@@ -5,7 +5,7 @@ from scipy.ndimage import distance_transform_edt
 # Function to generate a heatmap based on an equation
 def generate_heatmap(shape):
     x, y = np.meshgrid(np.linspace(-1, 1, shape[1]), np.linspace(-1, 1, shape[0]))
-    heatmap = np.sin(5 * x) + np.cos(5 * y)
+    heatmap = - x**2 - y**2
     return heatmap
 
 # Function to perform Fast Marching Method for CTSP
@@ -30,6 +30,7 @@ def fast_marching_ctsp(heatmap, start, path_length):
 
         # Find the neighbor with the lowest cost in the distance transform
         costs = [distance_transform[ni, nj] for ni, nj in neighbors]
+        # Here we can implement a more effective search algorithm
         min_index = np.argmin(costs)
         ni, nj = neighbors[min_index]
 
@@ -37,6 +38,9 @@ def fast_marching_ctsp(heatmap, start, path_length):
         i, j = ni, nj
         path.append((i, j))
         current_length += 1
+
+        # Update the distance transform to avoid revisiting the same point
+        distance_transform[i, j] = np.inf
 
     return np.array(path)
 
@@ -48,7 +52,7 @@ heatmap = generate_heatmap(heatmap_shape)
 start_point = (5, 5)
 
 # Path length for the particle
-desired_path_length = 100
+desired_path_length = 1000
 
 # Use Fast Marching Method for CTSP
 path = fast_marching_ctsp(heatmap, start_point, desired_path_length)
@@ -64,7 +68,7 @@ plt.colorbar(label='Heatmap Value')
 plt.plot(path[:, 1] / (heatmap_shape[1] - 1) * 2 - 1, path[:, 0] / (heatmap_shape[0] - 1) * 2 - 1, 'r-', linewidth=2)
 plt.scatter(start_point[1] / (heatmap_shape[1] - 1) * 2 - 1, start_point[0] / (heatmap_shape[0] - 1) * 2 - 1, color='red', marker='o', label='Start')
 
-plt.title('Heatmap and Particle Path')
+plt.title('Search Path of Host Vessel for Submersible')
 plt.xlabel('X-axis')
 plt.ylabel('Y-axis')
 plt.legend()
