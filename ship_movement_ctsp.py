@@ -6,6 +6,7 @@ from scipy.ndimage import distance_transform_edt
 def generate_heatmap(shape):
     x, y = np.meshgrid(np.linspace(-1, 1, shape[1]), np.linspace(-1, 1, shape[0]))
     heatmap = - x**2 - y**2
+    heatmap = np.cos(5*x) + np.sin(5*y)
     return heatmap
 
 # Function to perform Fast Marching Method for CTSP
