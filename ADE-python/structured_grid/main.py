@@ -12,7 +12,6 @@ from os import getcwd ,rename
 from os.path import join
 import os
 import shutil
-import pyevtk.hl
     
 if __name__=='__main__':
        
@@ -122,7 +121,10 @@ if __name__=='__main__':
         # writer.SetInputData(img)
         # writer.Write()
     
-    
+    # Save evolution data
+
     print("done")
     os.chdir(pwd)
+
+    np.savez('./ADE-python/evolution',evolution)
         
