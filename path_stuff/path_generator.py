@@ -86,7 +86,7 @@ def generate_path(n_paths, previous_path, desired_path_dist, heatmap, sonar_rang
     # combinde previous path with new path
     path = previous_path + best_path[1:]
 
-    return path, test_path(path, heatmap, sonar_range, sonar_falloff)
+    return best_path, path, test_path(path, heatmap, sonar_range, sonar_falloff)
 
 def depth_first_search(start, n_paths, desired_path_dist, heatmap, sonar_range, sonar_falloff, visited):
     stack = [(start, [start], fheat(start[0], start[1], heatmap, sonar_range, sonar_falloff))]

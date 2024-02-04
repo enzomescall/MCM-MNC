@@ -19,6 +19,7 @@ def generate_heatmap(shape):
 
 @njit
 def alter_heatmap(heatmap, path, sonar_range, sonar_falloff):
+    total_altered = 0
     for x,y in path:
         for i in range(sonar_range):
             for dx in range(-i, i+1):
@@ -28,12 +29,14 @@ def alter_heatmap(heatmap, path, sonar_range, sonar_falloff):
                     if is_within_bounds(nx, ny, heatmap):
                         d = distance(x, y, nx, ny)
                         if d == 0:
+                            total_altered += heatmap[nx, ny]
                             heatmap[nx, ny] = 0
                             continue
                         sonar_heat = heatmap[nx, ny] / (d ** sonar_falloff)
                         heatmap[nx, ny] -= sonar_heat
+                        total_altered += sonar_heat
 
-    print("Heatmap altered, sonar range:", sonar_range, "sonar falloff:", sonar_falloff)
+    print("Heatmap altered, sonar range:", sonar_range, "sonar falloff:", sonar_falloff, "total heat altered:", total_altered)
 
 # Generate heatmap
 heatmap_shape = (50, 50)
@@ -52,23 +55,25 @@ def complete_search(k_generations, n_paths, start_point, desired_path_length, he
     for i in range(k_generations):
         print(f"k = {i+1}/{k_generations}")
 
-        newpath, newheat = generate_path(n_paths, path, desired_path_length, heatmap, sonar_range, sonar_falloff)
+        newpath, fullpath, newheat = generate_path(n_paths, path, desired_path_length, heatmap, sonar_range, sonar_falloff)
 
         print(f"Total path heat: {newheat}, total nodes visited: {len(newpath)}")
 
         if newheat > 0:
-            path = newpath
+            path = fullpath
             heat = newheat
             top_path = (path, heat)
         else:
             print("No better path found, stopping search")
             return top_path
 
-        alter_heatmap(heatmap, path, sonar_range, sonar_falloff)
+        alter_heatmap(heatmap, newpath, sonar_range, sonar_falloff)
 
     return top_path
 
-top_path, heat = complete_search(10, 1000, start_point, 200, heatmap, sonar_range, sonar_falloff)
+top_path, heat = complete_search(5, 1000, start_point, 200, heatmap, sonar_range, sonar_falloff)
+
+print(f"Top path heat: {heat}, total nodes visited: {len(top_path)}")
 
 # Plot the heatmap and the particle's path of the top 5 paths
 plt.figure(figsize=(10, 8))
