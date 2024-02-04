@@ -44,7 +44,7 @@ heatmap = generate_heatmap(heatmap_shape)
 
 start_point = (25, 25)
 sonar_range = 5
-sonar_falloff = 1.4 # distance exponent factor
+sonar_falloff = 2 # distance exponent factor
 
 def complete_search(k_generations, n_paths, start_point, desired_path_length, heatmap, sonar_range, sonar_falloff):
     # deep copy heatmap
