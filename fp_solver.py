@@ -15,4 +15,4 @@ field.plot(method="streamplot", title="Stream plot")
 # eq = PDE({"c": f"{term_1} + {term_2}"}, bc={"value": 0})
 
 
-fp = pde.PDE({"p":"- divergence(p * )"})
+fp = pde.PDE({"p":"- divergence(p * (x))"})
