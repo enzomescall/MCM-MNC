@@ -1,3 +1,4 @@
+from numba import njit
 import gsw
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -89,10 +90,12 @@ for f in files:
     sensors.append(Sensor(longitude, latitude, temp, -depth, speed, angle))
     longs.append(longitude)
 
+@njit
 def buoyancy(rho, ballast = True):
     "Buoyancy equation"
     return 9.81 * (rho * 11.8 - (11800 + 500 * ballast))
 
+@njit
 def drag_force(rho, relative_velocity, area=15, coeff=0.1):
     "Drag force equation"
     return 0.5 * rho * relative_velocity**2 * area * coeff
@@ -136,6 +139,7 @@ def calculate_forces(latitude, depth, velocity, conditions, ballast=True):
 
     return np.array([x_force, y_force, z_force])
 
+@njit
 def position_to_latlong(position: (float, float), start_lat_long: (float, float)):
     """
     Converts a position to latitude and longitude.
@@ -171,9 +175,9 @@ def force(position: (float, float, float), velocity: (float, float, float), star
             print("failed", long, lat, depth, velocity)
             raise ValueError("No sensors in range")
 
-    if log_results:
-        print(f'Calculating forces with lat: {lat}, long: {long}, depth: {depth}')
-        print(f'And conditions: {conditions}')
+    # if log_results:
+    #     print(f'Calculating forces with lat: {lat}, long: {long}, depth: {depth}')
+    #     print(f'And conditions: {conditions}')
     return calculate_forces(lat, depth, velocity, conditions, ballast)
 
 
