@@ -12,9 +12,12 @@ from os import getcwd ,rename
 from os.path import join
 import os
 import shutil
+import path_tester as pg
     
 if __name__=='__main__':
        
+    pwd=getcwd()
+
     dimensions=[1,1,1]
     mesh_grid=[50,50,10]
     mesh_elem=[mesh_grid[0]-1, mesh_grid[1]-1, mesh_grid[2]-1]
@@ -31,9 +34,8 @@ if __name__=='__main__':
     print(phi.shape)
     phi = np.swapaxes(phi,1,3)
     
-    pwd=getcwd()
-    # print(pwd)
-    out_path =pwd+"/out_Paraview"
+    
+    out_path =pwd
 
     
     if not os.path.exists(out_path):
@@ -101,17 +103,16 @@ if __name__=='__main__':
     # print(img.GetData())
     dims = img.GetDimensions()
     print(dims)
-    print(dims)
     print(phi.shape)
     
-    evolution = np.zeros((phi.shape[0], dims[0], dims[1], dims[2]))
-    print(evolution.shape)
+    # evolution = np.zeros((phi.shape[0], dims[0], dims[1], dims[2]))
+    # print(evolution.shape)
 
-    for i in range((phi.shape[0])):
-        for z in range(dims[2]):
-            for y in range(dims[1]):
-                for x in range(dims[0]):
-                    evolution[i, x, y, z] = phi[i, x, y, z]
+    # for i in range((phi.shape[0])):
+    #     for z in range(dims[2]):
+    #         for y in range(dims[1]):
+    #             for x in range(dims[0]):
+    #                 evolution[i, x, y, z] = phi[i, x, y, z]
                     # img.SetScalarComponentFromDouble(x, y, z, 0, phi[i,x,y,z])
         
         # writer = vtk.vtkXMLImageDataWriter()
@@ -121,11 +122,9 @@ if __name__=='__main__':
         # writer.SetInputData(img)
         # writer.Write()
 
-    
+    np.save('phi', phi)
     # Save evolution data
 
     print("done")
     os.chdir(pwd)
 
-    np.savez('./ADE-python/evolution',evolution)
-        

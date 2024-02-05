@@ -1,9 +1,9 @@
 #This module is to put the input condition for the simulation
 import numpy as np
 import buoyancy_better
-from path_stuff.path_tester import lt, lg
+import path_tester as pg
 
-runtime=1	#simulation time
+runtime=20	#simulation time
 dt=0.1		#time step
 
 #put your velocity model here, it may be function or you can import from a file
@@ -15,8 +15,8 @@ def velocity_model(CV_zGRID_nos, CV_yGRID_nos, CV_xGRID_nos):
 	v = np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
 	w = np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
  
-	r0 = 0.1
-	gamma0 = 1
+	r0 = 0.95
+	gamma0 = 0.2
  
 	rho = r0 * np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
 	D = 0.5 * (1/(gamma0**2)) * np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
@@ -25,17 +25,21 @@ def velocity_model(CV_zGRID_nos, CV_yGRID_nos, CV_xGRID_nos):
 		print("finished layer: ", i)
 		for j in range(CV_yGRID_nos):
 			for k in range(CV_zGRID_nos):
-				i = lg(i)
-				j = lt(j)
-				k = -5000*k//CV_zGRID_nos # ideally we have a function with the height of the ionian or smth
-				coord_force, rho_arr = buoyancy_better.forces(j, i, k)
+				long = pg.lg(i)
+				lat = pg.lt(j)
+				depth = -5000*k//CV_zGRID_nos # ideally we have a function with the height of the ionian or smth
+				coord_force, rho_arr = buoyancy_better.forces(lat, long, depth)
+
+				# print(f'u: {u}')
+				# print(f'k: {k}, j: {j}, i: {i}')
+
 				u[k, j, i] = coord_force[0]
 				v[k, j, i] = coord_force[1]
 				w[k, j, i] = coord_force[2]
     
 				rho[k, j, i] = rho_arr
     
-				sigma = np.linalg.norm(coord_force[0], coord_force[1], coord_force[2])
+				sigma = np.linalg.norm((coord_force[0], coord_force[1], coord_force[2]))
 				D[k, j, i] = np.square(sigma)
 
 	assert u.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of u"

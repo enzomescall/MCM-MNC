@@ -139,9 +139,9 @@ def calculate_forces(latitude, depth, conditions, ballast=True):
     # y_speed = speed * np.sin(angle) - velocity[1]
     # z_speed = -velocity[2]
     
-    x_speed = speed * np.cos(angle)
-    y_speed = speed * np.sin(angle) 
-    z_speed = z_force
+    x_speed = (speed * np.cos(angle))/100 # dampen everything into centinewtons
+    y_speed = (speed * np.sin(angle))/100
+    z_speed = (z_force)/100
 
     # x_force += np.sign(x_speed) * drag_force(rho, x_speed)
     # y_force += np.sign(y_speed) * drag_force(rho, y_speed)
