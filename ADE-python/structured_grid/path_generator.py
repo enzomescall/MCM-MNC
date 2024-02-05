@@ -79,9 +79,12 @@ def generate_path(n_paths, previous_path, desired_path_dist, heatmap, sonar_rang
     # return highest heat path (this heat is innacurate lol)
     sorted_path_heats = sorted(path_heats, key=lambda x: x[1], reverse=True)
 
+
     best_path, best_heat = sorted_path_heats[0]
 
-    print(f"Ammended path heat: {best_heat}, Path distance: {path_dist(best_path)}")
+
+
+    #print(f"Ammended path heat: {best_heat}, Path distance: {path_dist(best_path)}")
 
     # combinde previous path with new path
     path = previous_path + best_path[1:]
@@ -91,7 +94,6 @@ def generate_path(n_paths, previous_path, desired_path_dist, heatmap, sonar_rang
 def depth_first_search(start, n_paths, desired_path_dist, heatmap, sonar_range, sonar_falloff, visited):
     stack = [(start, [start], fheat(start[0], start[1], heatmap, sonar_range, sonar_falloff))]
     path_heats = []
-
     while stack and len(path_heats) < n_paths:
         node, path, pheat = stack.pop()
 
@@ -111,7 +113,10 @@ def depth_first_search(start, n_paths, desired_path_dist, heatmap, sonar_range, 
 
         while not pq.empty():
             nheat, neighbor = pq.get()
-            if (neighbor not in path) and (neighbor not in visited):
+            if (neighbor not in path):
                 stack.append((neighbor, path + [neighbor], pheat+nheat))
+
+    if not path_heats:
+        print("No paths found")
 
     return path_heats

@@ -1,0 +1,20 @@
+New search
+Submersibles found: 0 out of 1000, Sonar range: 0.0, Ballast: True, Initial position: (1, 1)
+Submersibles found: 0 out of 1000, Sonar range: 0.8571428571428571, Ballast: True, Initial position: (1, 1)
+Submersibles found: 0 out of 1000, Sonar range: 1.7142857142857142, Ballast: True, Initial position: (1, 1)
+New search
+New search
+Submersibles found: 0 out of 1000, Sonar range: 0.0, Ballast: True, Initial position: (1, 1)
+Submersibles found: 0 out of 1000, Sonar range: 0.8571428571428571, Ballast: True, Initial position: (1, 1)
+Submersibles found: 433 out of 1000, Sonar range: 1.7142857142857142, Ballast: True, Initial position: (1, 1)
+Submersibles found: 567 out of 1000, Sonar range: 2.571428571428571, Ballast: True, Initial position: (1, 1)
+Time to find all subs: 26
+Submersibles found: 0 out of 1000, Sonar range: 3.4285714285714284, Ballast: True, Initial position: (1, 1)
+Submersibles found: 0 out of 1000, Sonar range: 4.285714285714286, Ballast: True, Initial position: (1, 1)
+Submersibles found: 0 out of 1000, Sonar range: 5.142857142857142, Ballast: True, Initial position: (1, 1)
+Submersibles found: 0 out of 1000, Sonar range: 6.0, Ballast: True, Initial position: (1, 1)
+New search
+Submersibles found: 1000 out of 1000, Sonar range: 3.0, Ballast: True, Initial position: (1, 1)
+Time to find all subs: 25
+Submersibles found: 0 out of 1000, Sonar range: 3.4285714285714284, Ballast: True, Initial position: (1, 1)
+Submersibles found: 0 out of 1000, Sonar range: 3.857142857142857, Ballast: True, Initial position: (1, 1)

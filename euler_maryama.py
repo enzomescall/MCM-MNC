@@ -49,7 +49,8 @@ def euler_maryama(n: int,
                   damper: float,
                   start_position: (float, float, float),
                   start_velocity: (float, float, float),
-                  start_lat_long: (float, float) = (38.22, 16.3),
+                  start_lat_long: (float, float),
+                  ballast: bool = True,
                   log_results = False) -> (np.ndarray, np.ndarray):
     # Initialize
     positions = np.zeros((n, 3))
@@ -65,7 +66,7 @@ def euler_maryama(n: int,
         if log_results:
             print(f'--------------------Iteration {t}/{n-1}--------------------')
         # Calculate forces: force(lat, long, depth, velocity, ballast = True)
-        forces = force(positions[t], velocities[t], start_lat_long, ballast = True, log_results = log_results) 
+        forces = force(positions[t], velocities[t], start_lat_long, ballast, log_results = log_results) 
 
         # need acceleration to calculate omega
         acceleration = calc_accelaration(forces, mass)
@@ -100,15 +101,14 @@ if __name__ == "__main__":
     # Initialize parametersy
 
     dt = 0.1 # time step
-    T = 10 # total time
+    T = 10000 # total time
     n = int(T / dt) # number of time steps
-    damper = 1 # multiplier for omega
+    damper = 0.02 # multiplier for omega
     mass = 11800
+    lat_long = (37.5, 21.5)
 
     start_position = (0, 0, -2000)
-    start_velocity = (1, 1, 0.1)
-
-    num_points = 100
+    start_velocity = (-1, 1, 0.1)
 
     print('Values have been initialized')
     print(f'dt: {dt}, T: {T}, n: {n}, mass: {mass}')
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         W[:, 1] = dW1
         W[:, 2] = dW2
 
-        positions, velocities, accelarations = euler_maryama(n, dt, mass, W, damper, start_position, start_velocity, log_results = False)
+        positions, velocities, accelarations = euler_maryama(n, dt, mass, W, damper, start_position, start_velocity, lat_long, log_results = False)
 
         paths.append(positions)
         # # Ask user if they want to plot the results
@@ -151,14 +151,15 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    for path in paths:
+    for i, path in enumerate(paths):
         # convert all x and y values to lat and long
-        lat_longs = np.array([position_to_latlong((x, y), (38.22, 16.3)) for x, y in path[:, :2]])
+        lat_longs = np.array([position_to_latlong((x, y), lat_long) for x, y in path[:, :2]])
 
-        ax.plot(lat_longs[:, 0], lat_longs[:, 1], path[:, 2])
+        # change the color of the path based on index
+        ax.plot(lat_longs[:, 0], lat_longs[:, 1], path[:, 2], label=f'Path {i}', color=(i/num_paths, 0, 1 - i/num_paths))
 
     # Plotting the initial position after conversion to latlong
-    start_lat_long = position_to_latlong(start_position[:2], (38.22, 16.3))
+    start_lat_long = position_to_latlong(start_position[:2], lat_long)
     ax.scatter(start_lat_long[0], start_lat_long[1], start_position[2], color='red', marker='o', label='Initial position')
 
     # remove y tickers and labels
@@ -166,6 +167,9 @@ if __name__ == "__main__":
 
     ax.set_xlabel('Longitude')
     ax.set_zlabel('Depth (m)')
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
+
     ax.set_title('Example of a potential path underwater submersible', fontsize=15)
 
     plt.savefig('3D_path.png')
@@ -190,4 +194,4 @@ if __name__ == "__main__":
         timestep.append((all_x, all_y))
 
     # save timestep to a file
-    np.save('timestep_new.npy', timestep)
+    np.save('timestep2.npy', timestep)

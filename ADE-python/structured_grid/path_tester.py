@@ -32,7 +32,7 @@ def alter_heatmap(heatmap, path, sonar_range, sonar_falloff):
                         heatmap[nx, ny] -= sonar_heat
                         total_altered += sonar_heat
 
-    print("Heatmap altered, sonar range:", sonar_range, "sonar falloff:", sonar_falloff, "total heat altered:", total_altered)
+    #print("Heatmap altered, sonar range:", sonar_range, "sonar falloff:", sonar_falloff, "total heat altered:", total_altered)
 
 def lt(x):
     return x*0.1 + 37
@@ -66,6 +66,85 @@ def complete_search(k_generations, n_paths, start_point, desired_path_length, he
     return top_path[0], top_path[1], heatmap
 
 # Your existing code...
+
+def stepwise_search(k_generations, n_paths, start_point, desired_path_length, heatmap_list, sonar_range, sonar_falloff, heatmap_skip = 20):
+    top_path = (None, heat := -np.inf)
+    path = [start_point]
+
+    for i, heatmap in enumerate(heatmap_list):
+        if i % heatmap_skip != 0:
+            # skip this heatmap
+            continue
+
+        print(f'Searching heatmap {i+1}/{len(heatmap_list)}')
+        # deep copy heatmap
+        heatmap = heatmap.copy()
+
+        # if i > 500:
+        #     desired_path_length = 40
+        #     sonar_range = 5
+
+        for i in range(k_generations):
+            print(f"k = {i+1}/{k_generations}")
+
+            newpath, fullpath, newheat = generate_path(n_paths, path, desired_path_length, heatmap, sonar_range, sonar_falloff)
+
+            print(f"Total path heat: {newheat}, total nodes visited: {len(newpath)}")
+
+            if newheat > heat:
+                path = fullpath
+                heat = newheat
+                top_path = (path, heat)
+
+            alter_heatmap(heatmap, newpath, sonar_range, sonar_falloff)
+
+        # ready to move to next heatmap
+        heat = -np.inf
+
+    return top_path[0], top_path[1], heatmap
+
+def check_search(k_generations, n_paths, start_point, desired_path_length, heatmap_list, sonar_range, sonar_falloff, submersible_paths, heatmap_skip = 20):   
+    path = [start_point]
+    subs_found = 0
+    heat = -np.inf
+    num_submersibles = len(submersible_paths)
+
+    for j, heatmap in enumerate(heatmap_list):
+        if j % 10 == 0:
+            print(f'Searching heatmap {j+1}/{len(heatmap_list)}')
+
+        if j % heatmap_skip != 0:
+            # skip this heatmap
+            continue
+        # deep copy heatmap
+        heatmap = heatmap.copy()
+
+        for i in range(k_generations):
+            newpath, fullpath, newheat = generate_path(n_paths, path, desired_path_length, heatmap, sonar_range, sonar_falloff)
+            
+            for i,_ in enumerate(submersible_paths):
+                submersible = submersible_paths.pop(0)
+                dist_to_sub = distance(fullpath[-1][0], fullpath[-1][1], submersible[j][0], submersible[j][1])
+                
+                if  dist_to_sub < sonar_range * np.random.uniform(0.5, 1.5):
+                    print("Submersible found!")
+                    subs_found += 1
+                    if subs_found == num_submersibles:
+                        print(f'All {num_submersibles} submersibles found in {j} timestamps')
+                        return subs_found, j
+                else:
+                    submersible_paths.append(submersible)
+            
+            if newheat > heat:
+                path = fullpath
+                heat = newheat
+
+            alter_heatmap(heatmap, newpath, sonar_range, sonar_falloff)
+
+        # ready to move to next heatmap
+        heat = -np.inf
+
+    return subs_found, None
 
 if __name__ == "__main__":
     # Generate heatmap

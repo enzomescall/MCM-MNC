@@ -39,7 +39,7 @@ for i, t in enumerate([9, 499, 999]):
         axs[i].set_yticklabels([])
         axs[i].set_yticks([])
 
-    axs[i].set_title(f'Timestep: {t+1}')
+    axs[i].set_title(f'Elapsed time: {(t+1)//10}s')
     axs[i].imshow(heatmap, extent=extent, origin='lower')
     axs[i].set_xlabel('Longitude')
 
