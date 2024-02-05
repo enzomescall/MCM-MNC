@@ -23,13 +23,12 @@ def calc_accelaration(force: (float, float, float), mass: float) -> (float, floa
 def omega(acceleration: (float, float, float), damper: float) -> float:
     return np.linalg.norm(acceleration) * damper
 
-def step_velocity(t: int,
-                  velocity: (float, float, float),
+def step_velocity(velocity: (float, float, float),
                   acceleration: (float, float, float),
                   omega: (float),
-                  W: np.ndarray,
+                  W: (float, float, float),
                   dt: float) -> (float, float, float):
-    return velocity + acceleration * dt + np.sqrt(dt) * omega * W[t]
+    return velocity + acceleration * dt + np.sqrt(dt) * omega * W
 
 def step_position(position: (float, float, float), velocity: (float, float, float), dt: float) -> (float, float, float):
     return position + velocity * dt
@@ -64,16 +63,19 @@ def euler_maryama(n: int,
         omega_value = omega(acceleration, damper)
 
         # Step velocity
-        velocities[t + 1] = step_velocity(t, velocities[t], acceleration, omega_value, W, dt)
+        velocities[t + 1] = step_velocity(velocities[t], acceleration, omega_value, W[t], dt)
+
+        prev_v_position = step_position(positions[t], velocities[t], dt)
+        next_v_position = step_position(positions[t], velocities[t + 1], dt)
 
         # Step position
-        positions[t + 1] = step_position(positions[t], velocities[t], dt)
+        positions[t + 1] = (prev_v_position + next_v_position)/2
 
         if log_results:
             print(f'Forces: {forces}')
             print(f'Acceleration: {acceleration}')
-            print(f'Omega: {omega_value}')
-            print(f'Wiener impact: {np.sqrt(dt) * omega_value *W[t]}')
+            print(f'Omega: {omega_value}, with damper: {damper}')
+            print(f'Wiener impact: {np.sqrt(dt) * omega_value * W[t]}')
             print(f'Velocity: {velocities[t + 1]}')
             print(f'Position: {positions[t + 1]}')
 
@@ -82,14 +84,14 @@ def euler_maryama(n: int,
 if __name__ == "__main__":
     # Initialize parametersy
 
-    dt = 1 # time step
-    T = 10000.0 # total time
+    dt = 0.1 # time step
+    T = 1000.0 # total time
     n = int(T / dt) # number of time steps
-    damper = 3 # multiplier for omega
+    damper = 50 # multiplier for omega
     mass = 11800
 
-    start_position = np.array([0, 0, -2000])
-    start_velocity = np.array([0.1, 0.1, 0.1])
+    start_position = (0, 0, -2000)
+    start_velocity = (0.1, 0.1, 0.1)
 
     num_points = 100
 
@@ -117,26 +119,32 @@ if __name__ == "__main__":
     # Euler-Maruyama method
     print('Starting Euler-Maruyama method...')
 
-    for i in np.linspace(5, 9, 41):
-        print(f'Running Euler-Maruyama method with {i} damper')
-        positions, velocities = euler_maryama(n, dt, mass, W, i, start_position, start_velocity)
+    paths = []
+
+    for i in range(1):
+        print(f'Running Euler-Maruyama method with {damper} damper')
+        positions, velocities = euler_maryama(n, dt, mass, W, damper, start_position, start_velocity, log_results = True)
 
         print(f'Euler-Maruyama method finished after {n} iterations')
 
+        paths.append(positions)
         # # Ask user if they want to plot the results
         # user_input = input('Do you want to plot the results? (y/n): ')
         # if user_input.lower() != 'y':
         #     print('Exiting...')
         #     exit()
 
-        # Plot
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.plot(positions[:, 0], positions[:, 1], positions[:, 2], label='Euler-Maruyama method')
-        ax.scatter(positions[0, 0], positions[0, 1], positions[0, 2], color='red', label='Start')
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
+    # Plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
-        # save figure in all_the_plots subfolder
-        plt.savefig(f'./all_the_plots/plot_omega_{i}.png')
+    for path in paths:
+        ax.plot(path[:, 0], path[:, 1], path[:, 2], color='blue', alpha=0.5)
+
+    ax.scatter(positions[0, 0], positions[0, 1], positions[0, 2], color='red', label='Start')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+
+    # save figure in all_the_plots subfolder
+    plt.show()
