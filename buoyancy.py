@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-
 class Sensor():
 
     def __init__(self, long, lat, temp, depth, speed, angle):
@@ -48,9 +47,7 @@ class Sensor():
         return str("Latitude: " + str(self.latitude) + " Longitude: " + str(self.longitude) + " Temperature (C): " + str(self.temperature) + 
                    " Depth (m): " + str(self.depth) + " Current speed (m/s): " + str(self.current_speed) + " Current angle (deg): " + 
                    str(self.current_angle))
-        
-        
-        
+    
 root = Path("files/order_65868_unrestricted")
 files = root.glob("*.txt")
 
@@ -91,22 +88,16 @@ for f in files:
 
     sensors.append(Sensor(longitude, latitude, temp, -depth, speed, angle))
     longs.append(longitude)
-    
-    
-    
+
 def buoyancy(rho, ballast = True):
     "Buoyancy equation"
     return 9.81 * (rho * 11.8 - (11800 + 500 * ballast))
 
-
 def drag_force(rho, relative_velocity, area=15, coeff=0.1):
     "Drag force equation"
-    return 1
-    # return 0.5 * rho * relative_velocity**2 * area * coeff
+    return 0.5 * rho * relative_velocity**2 * area * coeff
 
-
-# def calculate_forces(latitude, depth, velocity, conditions, ballast=True):
-def calculate_forces(latitude, depth, conditions, ballast=True):
+def calculate_forces(latitude, depth, velocity, conditions, ballast=True):
     """
     Calculates the forces acting on the submersible.
 
@@ -134,49 +125,84 @@ def calculate_forces(latitude, depth, conditions, ballast=True):
 
     angle = np.radians(conditions.current_angle)
     speed = conditions.current_speed
-
-    # x_speed = speed * np.cos(angle) - velocity[0]
-    # y_speed = speed * np.sin(angle) - velocity[1]
-    # z_speed = -velocity[2]
     
-    x_speed = (speed * np.cos(angle))/100 # dampen everything into centinewtons
-    y_speed = (speed * np.sin(angle))/100
-    z_speed = (z_force)/100 
+    x_speed = speed * np.cos(angle) - velocity[0]
+    y_speed = speed * np.sin(angle) - velocity[1]
+    z_speed = -velocity[2]
 
-    # x_force += np.sign(x_speed) * drag_force(rho, x_speed)
-    # y_force += np.sign(y_speed) * drag_force(rho, y_speed)
-    # z_force += np.sign(z_speed) * drag_force(rho, z_speed)
+    x_force += np.sign(x_speed) * drag_force(rho, x_speed)
+    y_force += np.sign(y_speed) * drag_force(rho, y_speed)
+    z_force += np.sign(z_speed) * drag_force(rho, z_speed)
 
-    # return np.array([x_force, y_force, z_force]), rho
+    return np.array([x_force, y_force, z_force])
 
-    return np.array([x_speed, y_speed, z_speed]), rho
+def position_to_latlong(position: (float, float), start_lat_long: (float, float)):
+    """
+    Converts a position to latitude and longitude.
+    Assuming starting latitude and longitude are 
+    in the middle of the Ionian sea
+    Assuming that the algorithm starts at (0, 0)
+    """
+    lat, long = start_lat_long
 
-# EXAMPLE USE CASE
+    meters_lat = 111132.92 - 559.82 * np.cos(2 * lat) + 1.175 * np.cos(4 * lat) - 0.0023 * np.cos(6 * lat)
+    meters_long = 111412.84 * np.cos(long) - 93.5 * np.cos(3 * long) + 0.118 * np.cos(5 * long)
 
-# I start by defining the location of the craft, and its initial velocity.
-# lat = 37.22
-# long = 15.3
-# depth = -700
-# velocity = [0.25, 0.25, -0.1]
+    current_lat = lat + (position[1] / meters_lat)
+    current_long = long + (position[0] / meters_long)
 
-# The craft has latitude 37.22 and longitude 15.3, and is 700 meters below the surface.
-# Its total velocity is 0.37 m/s; 0.25 eastward, 0.25 northward, 0.1 downward.
+    return current_long, current_lat
+       
 
-# This finds the nearest sensor. Very naive method but whatever
+def force(position: (float, float, float), velocity: (float, float, float), start_lat_long: (float, float), ballast = True, log_results = False):
+    
+    depth = position[2]
+    
+    long, lat = position_to_latlong(position[:2], start_lat_long)
 
-def forces(lat, long, depth, ballast=True):
-    dist = float("inf")
+    dist = np.inf
+    conditions = sensors[0]
     for s in sensors:
         displacement = s.distance(lat, long)
         if displacement < dist:
             dist = displacement
             conditions = s
+        elif dist == np.inf:
+            print("failed", long, lat, depth, velocity)
+            raise ValueError("No sensors in range")
 
-    # And this gets the forces! Yay!
-    # Feel free to divide this by 11800 to get the acceleration.
-    # Set ballast=True if ballast is on-board and False if it's not.
-    # Note that the craft is slightly decelerating in XY directions.
-    # If it has ballast, it's sinking slowly. If not, it's rising pretty fast.
-    force = calculate_forces(lat, depth, conditions, ballast)
-    
-    return force
+    if log_results:
+        print(f'Calculating forces with lat: {lat}, long: {long}, depth: {depth}')
+        print(f'And conditions: {conditions}')
+    return calculate_forces(lat, depth, velocity, conditions, ballast)
+
+
+# MAIN
+if __name__ == "__main__":
+    # EXAMPLE USE CASE
+
+    # I start by defining the location of the craft, and its initial velocity.
+    lat = 37.22
+    long = 15.3
+    depth = -700
+    velocity = [0.25, 0.25, -0.1]
+
+    # Plotting sensor locations
+    fig, ax = plt.subplots()
+    for sensor in sensors:
+        ax.scatter(sensor.longitude, sensor.latitude)
+
+    sensor = sensors[0]
+    lat, longn = sensors[1].latitude, sensors[1].longitude
+
+    # Print lat and long of first two sensors
+    print(lat, long)
+    print(sensor.latitude, sensor.longitude)
+
+
+    print(sensor.distance(lat, long))
+    print(sensor.distance(38.22, 16.3))
+    print(sensor.distance(position_to_latlong((0, 0), (38.22, 16.3))))
+
+    ax.scatter(long, lat, color="red")
+    plt.show()
