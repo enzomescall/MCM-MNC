@@ -39,7 +39,7 @@ heatmap_shape = (50, 50)
 heatmap = generate_heatmap(heatmap_shape)
 
 start_point = (12, 8)
-sonar_range = 5
+sonar_range = 3
 sonar_falloff = 2 # distance exponent factor
 
 def complete_search(k_generations, n_paths, start_point, desired_path_length, heatmap, sonar_range, sonar_falloff):
@@ -74,8 +74,8 @@ print(f"Top path heat: {heat}, total nodes visited: {len(top_path)}")
 def lt(x):
     return x*0.1 + 37
 
-def lg(y):
-    return y*0.1 + 17
+def lg(x):
+    return x*0.1 + 17
 
 # Plot the heatmap and the particle's path of the top 5 paths
 
@@ -85,22 +85,22 @@ heatmap = heatmap.T
 new_heatmap = new_heatmap.T
 
 # Plot the first subplot
-plt.subplot(1, 2, 2)
+plt.subplot(1, 2, 1)
 plt.xlabel('Long. (X)')
 plt.ylabel('Lat. (Y)')
-plt.title("Original Sample Space", fontsize=13)
+plt.title("Path on Original Sample Space", fontsize=13)
 plt.imshow(heatmap, interpolation='nearest', origin="lower", extent=(lg(0), lg(50), lt(0), lt(50)))
-plt.scatter(lg(start_point[0]), lt(start_point[1]), color='black', marker='.', label='Start Point', s=300, zorder=3)
-plt.scatter(lg(top_path[-1][0]), lt(top_path[-1][1]), color='black', marker='X', label=f'Final Point After: {len(top_path)} Steps', s=150, zorder=2)
-plt.plot([lg(x) for x, y in top_path], [lt(y) for x, y in top_path], color='red', label='Search Vessel Path', linewidth=3, zorder=1)
+plt.scatter(lg(start_point[0]), lt(start_point[1]), color='black', marker='.', label='Initial position', s=300, zorder=3)
+plt.scatter(lg(top_path[-1][0]), lt(top_path[-1][1]), color='black', marker='X', label=f'Final position at: {len(top_path)} steps', s=150, zorder=2)
+plt.plot([lg(x) for x, y in top_path], [lt(y) for x, y in top_path], color='red', label='Search path', linewidth=3, zorder=1)
 plt.legend()
 plt.xlim(17.5, 20.5)
 plt.ylim(37.5, 40.5)
 
 # Plot the second subplot
-plt.subplot(1, 2, 1)
+plt.subplot(1, 2, 2)
 plt.xlabel('Long. (X)')
-plt.title("Altered Sample Space", fontsize=13)
+plt.title("Path on Altered Sample Space", fontsize=13)
 plt.imshow(new_heatmap, interpolation='nearest', origin="lower", extent=(lg(0), lg(50), lt(0), lt(50)))
 plt.scatter(lg(start_point[0]), lt(start_point[1]), color='black', marker='.', label='Start Point', s=300, zorder=3)
 plt.scatter(lg(top_path[-1][0]), lt(top_path[-1][1]), color='black', marker='X', label=f'Final Point After: {len(top_path)} Steps', s=150, zorder=2)
