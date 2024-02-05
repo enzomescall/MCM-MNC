@@ -86,9 +86,9 @@ def LinFlux(struct_mesh):
 	#these values to be imported from the parameter module
 	# u,v,w=velocity_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos)
 
-	u,v,w, rho = velocity_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos)
+	u,v,w, rho, gamma = velocity_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos)
  
-	gamma=diffusion_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos)
+	# gamma=diffusion_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos)
 	
 	# rho=density_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos)
 

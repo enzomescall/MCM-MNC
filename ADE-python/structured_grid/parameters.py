@@ -11,13 +11,15 @@ dt=0.1		#time step
 
 def velocity_model(CV_zGRID_nos, CV_yGRID_nos, CV_xGRID_nos):
 	#need to difine at cv inteference points
-	u=np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
-	v=np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
-	w=np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+	u = np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+	v = np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+	w = np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
  
 	r0 = 0.1
+	gamma0 = 1
  
-	rho=r0 * np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+	rho = r0 * np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+	D = 0.5 * (1/(gamma0**2)) * np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
  
 	for i in range(CV_xGRID_nos):
 		print("finished layer: ", i)
@@ -30,23 +32,28 @@ def velocity_model(CV_zGRID_nos, CV_yGRID_nos, CV_xGRID_nos):
 				u[k, j, i] = coord_force[0]
 				v[k, j, i] = coord_force[1]
 				w[k, j, i] = coord_force[2]
+    
 				rho[k, j, i] = rho_arr
+    
+				sigma = np.linalg.norm(coord_force[0], coord_force[1], coord_force[2])
+				D[k, j, i] = np.square(sigma)
 
 	assert u.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of u"
 	assert v.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of v"
 	assert w.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of w"
 	assert rho.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of rho"
+	assert D.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of gamma"
 
-	return u, v, w, rho
+	return u, v, w, rho, D
 
 
 #put your diffusion model here, it may be function or you can import from a file
 #keep the dimension in mind
-def diffusion_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos):
+# def diffusion_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos):
 	G0=0.01
 	
 	#need to difine at cv inteference points
-	gamma=G0*np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))		#create real diffusion coeff grid
+	# gamma=G0*np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))		#create real diffusion coeff grid
 
 	
 	#subtract false diffusion coefficient due to oblique flow
@@ -57,8 +64,8 @@ def diffusion_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos):
 	# 			theta=atan(v[i,j]/u[i,j])
 	# 			gamma[i,j]=gamma[i,j]-rho[i,j]*sqrt(u[i,j]**2+v[i,j]**2)*dxg(i)*dyg(j)*sin(2*theta)/(4*dyg(j)*sin(theta)**3+4*dxg(i)*cos(theta)**3) 
 	
-	assert gamma.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of gamma"
-	return gamma
+	# assert gamma.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of gamma"
+	# return gamma
 
 
 #put your density model here, it may be function or you can import from a file
