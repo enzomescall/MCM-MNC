@@ -2,7 +2,7 @@ from numba import njit
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
-from buoyancy import force
+from buoyancy import force, position_to_latlong
 
 """
 OLD ERIK FUNCTION
@@ -34,8 +34,9 @@ def omega(acceleration: (float, float, float), damper: float) -> float:
 @njit
 def step_velocity(velocity: (float, float, float),
                   acceleration: (float, float, float),
+                    omega: float, W: (float, float, float),
                   dt: float) -> (float, float, float):
-    return velocity + acceleration * dt
+    return velocity + acceleration * dt + omega * W * np.sqrt(dt)
 
 @njit
 def step_position(position: (float, float, float), velocity: (float, float, float), acceleration: (float, float, float), dt: float) -> (float, float, float):
@@ -73,22 +74,21 @@ def euler_maryama(n: int,
         # omega_value = omega(acceleration, damper)
 
         # need stochastic acceleration to calculate velocity
-        random_acceleration = stochastic_acceleration(acceleration, omega_value, W[t], dt)
-        accelerations.append(random_acceleration)
+        accelerations.append(acceleration)
 
         # need velocity to calculate position
-        velocities[t + 1] = step_velocity(velocities[t], random_acceleration, dt)
+        velocities[t + 1] = step_velocity(velocities[t], acceleration, omega_value,W[t],  dt)
 
         # step position
-        position_curr_v = step_position(positions[t], velocities[t], random_acceleration, dt)
-        position_next_v = step_position(positions[t], velocities[t + 1], random_acceleration, dt)
+        position_curr_v = step_position(positions[t], velocities[t], acceleration, dt)
+        position_next_v = step_position(positions[t], velocities[t + 1], acceleration, dt)
 
         # average between current and next velocity
         positions[t + 1] = (position_curr_v + position_next_v)/2
 
         if log_results:
             print(f'Forces: {forces}')
-            print(f'Acceleration: {random_acceleration}')
+            print(f'Acceleration: {acceleration}')
             print(f'Omega: {omega_value}, with damper: {damper}')
             print(f'Wiener impact: {np.sqrt(dt) * omega_value * W[t]}')
             print(f'Velocity: {velocities[t + 1]}')
@@ -99,10 +99,10 @@ def euler_maryama(n: int,
 if __name__ == "__main__":
     # Initialize parametersy
 
-    dt = 0.2 # time step
-    T = 200 # total time
+    dt = 0.1 # time step
+    T = 10 # total time
     n = int(T / dt) # number of time steps
-    damper = 2 # multiplier for omega
+    damper = 1 # multiplier for omega
     mass = 11800
 
     start_position = (0, 0, -2000)
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     print('Starting Euler-Maruyama method...')
 
     paths = []
-    num_paths = 5000
+    num_paths = 1
 
     for i in range(num_paths):
         if i % 10 == 0:
@@ -146,9 +146,34 @@ if __name__ == "__main__":
         #     print('Exiting...')
         #     exit()
 
+    # Plotting the results
+    print('Plotting the results...')
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    for path in paths:
+        # convert all x and y values to lat and long
+        lat_longs = np.array([position_to_latlong((x, y), (38.22, 16.3)) for x, y in path[:, :2]])
+
+        ax.plot(lat_longs[:, 0], lat_longs[:, 1], path[:, 2])
+
+    # Plotting the initial position after conversion to latlong
+    start_lat_long = position_to_latlong(start_position[:2], (38.22, 16.3))
+    ax.scatter(start_lat_long[0], start_lat_long[1], start_position[2], color='red', marker='o', label='Initial position')
+
+    # remove y tickers and labels
+    ax.set_ylabel('Latitude')
+
+    ax.set_xlabel('Longitude')
+    ax.set_zlabel('Depth (m)')
+    ax.set_title('Example of a potential path underwater submersible', fontsize=15)
+
+    plt.savefig('3D_path.png')
+    plt.show()
+
     # Making a heatmap of the paths
     print('Appending arrays...')
-    
+
     timestep = []
 
     for i in range(n):
@@ -164,57 +189,5 @@ if __name__ == "__main__":
 
         timestep.append((all_x, all_y))
 
-    print("Making heatmap...")
-
-    import matplotlib.pyplot as plt
-    import matplotlib.animation as animation
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-
-    heatmap, xedges, yedges = np.histogram2d(all_x, all_y, bins=50, density=True)
-    extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-
-    im = ax.imshow(heatmap.T, extent=extent, origin='lower')
-
-    def update(i):
-        all_x = timestep[i][0]
-        all_y = timestep[i][1]
-
-        plt.title(f'Iteration {i} - Heatmap')
-
-        heatmap, _, _ = np.histogram2d(all_x, all_y, bins=25, density=True, range=[[-10,210],[-10,210]])
-        im.set_array(heatmap.T)
-
-    ani = animation.FuncAnimation(fig, update, frames=len(timestep), interval=20)
-    plt.show()
-
-
-    # # Plot
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-
-    # for path in paths:
-    #     ax.plot(path[:, 0], path[:, 1], path[:, 2], color='blue', alpha=0.05)
-
-    # ax.scatter(positions[0, 0], positions[0, 1], positions[0, 2], color='red', label='Start')
-    # ax.set_xlabel('X')
-    # ax.set_ylabel('Y')
-    # ax.set_zlabel('Z')
-
-    # # save figure in all_the_plots subfolder
-    # plt.show()
-
-    # plot a histogram of accelarations
-    # fig, axs = plt.subplots(3, 1, figsize=(8, 12))
-
-    # accelerations = np.array(accelarations)
-    # labels = ['X', 'Y', 'Z']
-
-    # for i in range(3):
-    #     axs[i].hist(accelerations[:, i], bins=50, alpha=0.7)
-    #     axs[i].set_xlabel(f'Acceleration {labels[i]}')
-    #     axs[i].set_ylabel('Frequency')
-
-    # plt.tight_layout()
-    # plt.show()
+    # save timestep to a file
+    np.save('timestep_new.npy', timestep)
