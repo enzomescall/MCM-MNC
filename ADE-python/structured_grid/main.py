@@ -15,8 +15,8 @@ import shutil
     
 if __name__=='__main__':
        
-    dimensions=[2,4,4]
-    mesh_grid=[20,20,10]
+    dimensions=[1,1,1]
+    mesh_grid=[50,50,10]
     mesh_elem=[mesh_grid[0]-1, mesh_grid[1]-1, mesh_grid[2]-1]
     meshg=struct_mesh(dimensions,mesh_grid)
     meshg.generate_mesh()

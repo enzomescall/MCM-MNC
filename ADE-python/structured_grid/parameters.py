@@ -1,6 +1,7 @@
 #This module is to put the input condition for the simulation
 import numpy as np
-
+import buoyancy_better
+from path_stuff.path_tester import lt, lg
 
 runtime=1	#simulation time
 dt=0.1		#time step
@@ -8,21 +9,35 @@ dt=0.1		#time step
 #put your velocity model here, it may be function or you can import from a file
 #keep the dimension in mind
 
-def velocity_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos):
-	flow_u=0.1
-	flow_v=-0.1
-	flow_w=-0.1
-
+def velocity_model(CV_zGRID_nos, CV_yGRID_nos, CV_xGRID_nos):
 	#need to difine at cv inteference points
-	u=flow_u*np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
-	v=flow_v*np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
-	w=flow_w*np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+	u=np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+	v=np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+	w=np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+ 
+	r0 = 0.1
+ 
+	rho=r0 * np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+ 
+	for i in range(CV_xGRID_nos):
+		print("finished layer: ", i)
+		for j in range(CV_yGRID_nos):
+			for k in range(CV_zGRID_nos):
+				i = lg(i)
+				j = lt(j)
+				k = -5000*k//CV_zGRID_nos # ideally we have a function with the height of the ionian or smth
+				coord_force, rho_arr = buoyancy_better.forces(j, i, k)
+				u[k, j, i] = coord_force[0]
+				v[k, j, i] = coord_force[1]
+				w[k, j, i] = coord_force[2]
+				rho[k, j, i] = rho_arr
 
 	assert u.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of u"
 	assert v.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of v"
 	assert w.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of w"
+	assert rho.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of rho"
 
-	return u,v,w
+	return u, v, w, rho
 
 
 #put your diffusion model here, it may be function or you can import from a file
@@ -46,16 +61,19 @@ def diffusion_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos):
 	return gamma
 
 
-#put your velocity model here, it may be function or you can import from a file
+#put your density model here, it may be function or you can import from a file
 #keep the dimension in mind
-def density_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos):
-	r0=1
+# def density_model(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos):
+# 	r0=1
 
-	#need to difine at cv inteference points
-	rho=r0*np.ones((CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos))
+# 	rho = np.load("densities")
 
-	assert rho.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of rho"
-	return rho
+# 	#need to difine at cv inteference points
+# 	rho=r0*rho
+
+# 	assert rho.shape==(CV_zGRID_nos,CV_yGRID_nos,CV_xGRID_nos), "inncorect, shape of rho"
+ 
+# 	return rho
 
 
 #put your sourse term model here, it may be function or you can import from a file
